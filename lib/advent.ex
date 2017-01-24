@@ -1,51 +1,30 @@
+require IEx;
+
 defmodule Advent do
-  def test_data do
-    ["R1", "L4", "L5", "L5", "R2", "R2",]
+
+  def coordinate(steps) do
+    {_, final } = steps
+      |> String.split(", ")
+      |> Enum.flat_map_reduce([0, 0, :n], fn step, position ->
+         {direction, steps} = String.split_at(step, 1)
+         new_position = position |> turn(direction) |> step(String.to_integer(steps))
+         {[position], new_position}
+      end)
+
+    determine_distance(final)
   end
 
-  def coordinate(test_data) do
-    final = Enum.reduce(test_data, {:N, [0,0]}, fn(x,acc) -> move(x, acc) end)
-    tester = elem(final,1)
-    abs(List.first(tester)) + abs(List.last(tester))
+  @turn %{"R" => [n: :e, e: :s, s: :w, w: :n], "L" => [n: :w, w: :s, s: :e, e: :n]}
+
+  defp turn([x, y, old_heading], direction) do
+    [x,y,@turn[direction][old_heading]]
   end
 
-  def move(new, old_coord) when elem(old_coord, 0) == :N do
-    [turn,steps,x,y] = extract_values(new, old_coord)
-    cond do
-      turn == "R" -> {:E, [x+steps, y]}
-      turn == "L" -> {:W, [x-steps, y]}
-    end
-  end
+  defp determine_distance([x,y,_]), do: abs(x) + abs(y)
 
-  def move(new, old_coord) when elem(old_coord, 0) == :E do
-    [turn,steps,x,y] = extract_values(new, old_coord)
-    cond do
-      turn == "R" -> {:S, [x, y-steps]}
-      turn == "L" -> {:N, [x, y+steps]}
-    end
-  end
-
-  def move(new, old_coord) when elem(old_coord, 0) == :S do
-    [turn,steps,x,y] = extract_values(new, old_coord)
-    cond do
-      turn == "R" -> {:W, [x-steps, y]}
-      turn == "L" -> {:E, [x+steps, y]}
-    end
-  end
-
-  def move(new, old_coord) when elem(old_coord, 0) == :W do
-    [turn,steps,x,y] = extract_values(new, old_coord)
-    cond do
-      turn == "R" -> {:N, [x, y+steps]}
-      turn == "L" -> {:S, [x, y-steps]}
-    end
-  end
-
-  def extract_values(new,coords) do
-    turn = String.at(new,0)
-    steps = String.to_integer(elem(String.split_at(new,1),1))
-    x = List.first(elem(coords, 1))
-    y = List.last(elem(coords, 1))
-    [turn,steps,x,y]
-  end
+  defp step([x,y,:n], steps), do: [x,y+steps,:n]
+  defp step([x,y,:e], steps), do: [x+steps,y,:e]
+  defp step([x,y,:s], steps), do: [x,y-steps,:s]
+  defp step([x,y,:w], steps), do: [x-steps,y,:w]
 end
+
