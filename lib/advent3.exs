@@ -1,17 +1,32 @@
 require IEx;
 
 defmodule Advent3 do
-  def find_triangle(instructions) do
-    triangle = instructions
-      |> String.split
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk(3)
-      |> Enum.reduce(0, &check_points/2)
-    triangle
+
+  def find_triangle_horizontal(instructions), do: count_triangles(instructions, &match_horizontally/1)
+
+  def find_triangle_vertical(instructions), do: count_triangles(instructions, &match_vertically/1)
+
+  def match_horizontally(triangle_list), do: Enum.chunk(triangle_list, 3)
+
+  def match_vertically(triangle_list) do
+    triangle_list
+    |> Enum.chunk(3)
+    |> Enum.chunk(3)
+    |> Enum.flat_map(fn [[a,b,c], [d,e,f], [g,h,i]] ->
+      [[a,d,g], [b,e,h], [c,f,i]]
+    end)
   end
 
-  def check_points([a,b,c], accumulator) when a<b+c and b<a+c and c<b+a, do: accumulator + 1
-  def check_points(_, accumulator), do: accumulator
+  def count_triangles(instructions, matcher_function) do
+    instructions
+    |> String.split
+    |> Enum.map(&String.to_integer/1)
+    |> matcher_function.()
+    |> Enum.count(&check_points/1)
+  end
+
+  def check_points([a,b,c]) when a<b+c and b<a+c and c<b+a, do: true
+  def check_points(_), do: false
 end
 
 ExUnit.start
@@ -1755,6 +1770,8 @@ defmodule Advent3Test do
    48  263  586
   356  902  922
   """
-  assert 917 == Advent3.find_triangle(@example_input)
+  assert 917 == Advent3.find_triangle_horizontal(@example_input)
+  assert 1649 == Advent3.find_triangle_vertical(@example_input)
+
 end
 
